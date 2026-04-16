@@ -268,7 +268,14 @@ function loadCs(sheetName) {
     while (i < rows.length) {
       const cell = rows[i][0];
       if (cell && String(cell).includes('ColorSing')) {
-        i += 2; // ヘッダー行スキップ
+        i += 1; // セクションタイトル行をスキップ
+        // 次の行が列ヘッダー行（本名/合計など）なら追加でスキップ
+        // ColorSingには列ヘッダーあり、ColorSing②にはない
+        if (i < rows.length) {
+          const nextSales = rows[i][3];
+          const isHeader = nextSales === null || (typeof nextSales !== 'number' && isNaN(parseFloat(nextSales)));
+          if (isHeader) i += 1;
+        }
         while (i < rows.length) {
           const row = rows[i];
           const rn = row[0];
