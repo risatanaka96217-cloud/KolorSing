@@ -37,13 +37,18 @@
 
     /* ランキンググリッド */
     #rankArea { display: none; margin-top: 12px; }
-    .rank-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+    .rank-grid { display: flex; flex-wrap: wrap; gap: 12px; }
     .view { display: none; }
     .view.on { display: block; }
 
-    .rank-col { background: #fff; border-radius: 12px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+    .rank-col { background: #fff; border-radius: 12px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.08); width: 400px; max-width: 100%; }
     .rank-col h3 { margin: 0 0 12px; font-size: 15px; }
     .rank-col h3.cs { color: #e91e8c; }
+
+    /* 月合計バナー */
+    .month-total { background: #fce4ec; border-radius: 10px; padding: 12px 18px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+    .month-total-label { font-size: 14px; color: #c2185b; font-weight: 600; }
+    .month-total-val { font-size: 20px; font-weight: bold; color: #e91e8c; }
 
     .rrow { display: flex; padding: 8px 4px; border-bottom: 1px solid #f0f0f0; align-items: flex-start; gap: 6px; }
     .rrow:last-child { border-bottom: none; }
@@ -96,6 +101,10 @@
     <button class="tabBtn"    onclick="switchTab('yearly')">📊 年別合計</button>
   </div>
   <div id="view-monthly" class="view on">
+    <div id="month-total-bar" class="month-total" style="display:none;">
+      <span class="month-total-label" id="month-total-label"></span>
+      <span class="month-total-val" id="month-total-val"></span>
+    </div>
     <div class="rank-grid" id="grid"></div>
   </div>
   <div id="view-yearly" class="view">
@@ -311,10 +320,18 @@ function removeMonth(e, key) {
 // ===== ランキング =====
 function renderRanking() {
   const grid = document.getElementById("grid");
-  if (!activeKey) { grid.innerHTML = ""; return; }
+  const bar  = document.getElementById("month-total-bar");
+  const lbl  = document.getElementById("month-total-label");
+  const val  = document.getElementById("month-total-val");
+  if (!activeKey) { grid.innerHTML = ""; bar.style.display = "none"; return; }
 
   const cd = csData[activeKey];
-  if (!cd) { grid.innerHTML = ""; return; }
+  if (!cd) { grid.innerHTML = ""; bar.style.display = "none"; return; }
+
+  const total = cd.livers.reduce((s, l) => s + l.sales, 0);
+  lbl.textContent = `${cd.month} 全体合計`;
+  val.textContent = `¥${total.toLocaleString()}`;
+  bar.style.display = "flex";
 
   grid.innerHTML = rankColHTML(cd.livers, `ColorSing ${cd.month}`, activeKey);
 }
@@ -367,17 +384,19 @@ function renderYearly() {
     const sorted = Object.values(totals).sort((a, b) => b.sales - a.sales);
     if (sorted.length === 0) continue;
 
+    const yearTotal = sorted.reduce((s, l) => s + l.sales, 0);
     const nc = i => i===0?'g':i===1?'s':i===2?'b':'';
     const rows = sorted.map((l, i) => `
       <div class="rrow">
         <span class="rnum ${nc(i)}">${i+1}</span>
         <div class="rwrap">
           <div class="rname" onclick="openModal('${encodeURIComponent(l.real_name)}')">${escH(l.selected)}</div>
+          <div class="rraw">${escH(l.real_name)}</div>
         </div>
         <div class="rsales">¥${l.sales.toLocaleString()}</div>
       </div>`).join('');
 
-    html += `<div class="rank-col"><h3 class="cs">${year}年 ColorSing ランキング</h3>${rows}</div>`;
+    html += `<div class="rank-col"><h3 class="cs">${year}年 ColorSing ランキング <span style="font-size:12px;color:#aaa;font-weight:normal;">合計 ¥${yearTotal.toLocaleString()}</span></h3>${rows}</div>`;
   }
 
   ygrid.innerHTML = html || '<p style="color:#aaa;padding:16px;">データがありません</p>';
