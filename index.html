@@ -146,7 +146,7 @@
 
   <!-- 年別合計 -->
   <div id="view-yearly" class="view">
-    <div id="ygrid"></div>
+    <div id="ygrid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(360px,1fr)); gap:12px; margin-top:12px;"></div>
   </div>
 
   <!-- 合計推移 -->
@@ -310,7 +310,10 @@ function loadCs(sheetName) {
 function onLoaded(key) {
   try {
     if (!activeKey || numKey(key) > numKey(activeKey)) activeKey = key;
-    show(); renderChips(); renderRanking(); persist();
+    show(); renderChips(); renderRanking();
+    if (activeTab === 'yearly') renderYearly();
+    if (activeTab === 'trend')  renderTrend();
+    persist();
   } catch(e) { console.error(e); alert('表示エラー: ' + e.message); }
 }
 
@@ -419,27 +422,23 @@ function renderYearly() {
 
     const yearTotal = sorted.reduce((s, l) => s + l.sales, 0);
     const nc = i => i===0?'g':i===1?'s':i===2?'b':'';
-    const totalRows = sorted.length;
-    const rows = sorted.map((l, i) => {
-      const noBorder = (totalRows % 2 === 1 && i === totalRows - 1) ? ' no-border-b' : '';
-      return `
-        <div class="rrow${noBorder}">
-          <span class="rnum ${nc(i)}">${i+1}</span>
-          <div class="rwrap">
-            <div class="rname" onclick="openModal('${encodeURIComponent(l.real_name)}')">${escH(l.selected)}</div>
-            <div class="rraw">${escH(l.real_name)}</div>
-          </div>
-          <div class="rsales">¥${l.sales.toLocaleString()}</div>
-        </div>`;
-    }).join('');
+    const rows = sorted.map((l, i) => `
+      <div class="rrow">
+        <span class="rnum ${nc(i)}">${i+1}</span>
+        <div class="rwrap">
+          <div class="rname" onclick="openModal('${encodeURIComponent(l.real_name)}')">${escH(l.selected)}</div>
+          <div class="rraw">${escH(l.real_name)}</div>
+        </div>
+        <div class="rsales">¥${l.sales.toLocaleString()}</div>
+      </div>`).join('');
 
     html += `
-      <div class="card" style="margin-top:12px; padding:18px 20px;">
+      <div class="card" style="padding:18px 20px;">
         <div class="rank-col-title">
           <h3>${year}年 ColorSing ランキング</h3>
           <span class="year-total">年間合計 ¥${yearTotal.toLocaleString()}</span>
         </div>
-        <div class="rank-items">${rows}</div>
+        ${rows}
       </div>`;
   }
   ygrid.innerHTML = html || '<p style="color:#bbb;padding:20px;">データがありません</p>';
