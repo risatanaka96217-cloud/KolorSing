@@ -8,73 +8,103 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     * { box-sizing: border-box; }
-    body { font-family: sans-serif; padding: 20px; background: #f0f2f5; margin: 0; }
-    h1 { margin-bottom: 14px; color: #1a1a2e; }
+    body { font-family: sans-serif; padding: 20px; background: #f5f5f7; margin: 0; color: #1a1a2e; }
+    h1 { margin: 0 0 14px; font-size: 22px; }
 
-    .card { background: #fff; padding: 16px; border-radius: 12px; margin-top: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+    /* カード */
+    .card { background: #fff; padding: 16px; border-radius: 14px; margin-top: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.07); }
 
     /* ファイル読み込み */
-    .file-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 6px 0; }
-    .app-badge { font-size: 12px; font-weight: bold; width: 90px; flex-shrink: 0; }
-    .app-badge.cs { color: #e91e8c; }
-    .file-btn { color: #fff; border: none; border-radius: 6px; padding: 6px 13px; font-size: 13px; cursor: pointer; white-space: nowrap; }
-    .file-btn.cs { background: #e91e8c; }
-    .file-btn.cs:hover { background: #c01070; }
-    .file-name { font-size: 12px; color: #999; }
+    .file-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 4px 0; }
+    .app-badge { font-size: 12px; font-weight: bold; color: #e91e8c; flex-shrink: 0; }
+    .file-btn { background: #e91e8c; color: #fff; border: none; border-radius: 8px; padding: 7px 16px; font-size: 13px; cursor: pointer; }
+    .file-btn:hover { background: #c01070; }
+    .file-name { font-size: 12px; color: #aaa; }
 
-    /* 読み込み済み月チップ */
-    #months { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-    .chip { background: #fce4ec; color: #e91e8c; border-radius: 20px; padding: 4px 10px 4px 14px; font-size: 13px; cursor: pointer; border: 2px solid transparent; display: inline-flex; align-items: center; gap: 5px; user-select: none; }
-    .chip.on { border-color: #e91e8c; font-weight: bold; }
-    .chip .x { color: #bbb; font-size: 11px; cursor: pointer; }
-    .chip .x:hover { color: #c00; }
+    /* 月チップ */
+    #months { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+    .chip { background: #fce4ec; color: #c2185b; border-radius: 20px; padding: 4px 12px 4px 14px;
+            font-size: 13px; cursor: pointer; border: 2px solid transparent;
+            display: inline-flex; align-items: center; gap: 5px; user-select: none; transition: .15s; }
+    .chip.on { border-color: #e91e8c; font-weight: bold; background: #fff; color: #e91e8c; }
+    .chip:hover:not(.on) { background: #f8bbd0; }
+    .chip .x { color: #ccc; font-size: 10px; line-height: 1; }
+    .chip .x:hover { color: #e00; }
+
+    /* アクションボタン */
+    .action-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+    .act-btn { border: none; border-radius: 8px; padding: 7px 16px; font-size: 13px; cursor: pointer; color: #fff; }
 
     /* タブ */
-    .tabs { display: flex; gap: 0; margin-top: 14px; border-bottom: 2px solid #e0e0e0; }
-    .tabBtn { padding: 9px 22px; cursor: pointer; font-size: 14px; color: #888; border: none; background: none; border-bottom: 3px solid transparent; margin-bottom: -2px; font-weight: 500; }
-    .tabBtn.on { color: #e91e8c; border-bottom-color: #e91e8c; font-weight: bold; }
-    .tabBtn:hover:not(.on) { color: #333; }
-
-    /* ランキンググリッド */
-    #rankArea { display: none; margin-top: 12px; }
-    .rank-grid { display: flex; flex-wrap: wrap; gap: 12px; }
+    #rankArea { display: none; margin-top: 14px; }
+    .tabs { display: flex; gap: 0; border-bottom: 2px solid #e8e8e8; }
+    .tabBtn { padding: 10px 22px; cursor: pointer; font-size: 14px; color: #999;
+              border: none; background: none; border-bottom: 3px solid transparent;
+              margin-bottom: -2px; font-weight: 500; transition: color .15s; }
+    .tabBtn.on { color: #e91e8c; border-bottom-color: #e91e8c; font-weight: 700; }
+    .tabBtn:hover:not(.on) { color: #444; }
     .view { display: none; }
     .view.on { display: block; }
 
-    .rank-col { background: #fff; border-radius: 12px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.08); width: 400px; max-width: 100%; }
-    .rank-col h3 { margin: 0 0 12px; font-size: 15px; }
-    .rank-col h3.cs { color: #e91e8c; }
-
     /* 月合計バナー */
-    .month-total { background: #fce4ec; border-radius: 10px; padding: 12px 18px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
-    .month-total-label { font-size: 14px; color: #c2185b; font-weight: 600; }
-    .month-total-val { font-size: 20px; font-weight: bold; color: #e91e8c; }
+    .month-total-bar {
+      display: none; align-items: center; justify-content: space-between;
+      background: linear-gradient(135deg, #fce4ec, #fff0f6);
+      border: 1px solid #f8bbd0; border-radius: 12px;
+      padding: 14px 20px; margin: 12px 0 10px;
+    }
+    .month-total-label { font-size: 13px; color: #c2185b; font-weight: 600; }
+    .month-total-val { font-size: 22px; font-weight: 800; color: #e91e8c; letter-spacing: -.5px; }
 
-    .rrow { display: flex; padding: 8px 4px; border-bottom: 1px solid #f0f0f0; align-items: flex-start; gap: 6px; }
+    /* ランキングカード (全幅) */
+    .rank-col { background: #fff; border-radius: 14px; padding: 18px 20px; box-shadow: 0 2px 8px rgba(0,0,0,.07); margin-top: 0; }
+    .rank-col-title { display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; }
+    .rank-col-title h3 { margin: 0; font-size: 15px; color: #e91e8c; }
+    .rank-col-title .year-total { font-size: 12px; color: #bbb; }
+
+    /* ランキング行 — 2列グリッド */
+    .rank-items { display: grid; grid-template-columns: 1fr 1fr; gap: 0 4px; }
+    @media (max-width: 640px) { .rank-items { grid-template-columns: 1fr; } }
+
+    .rrow { display: flex; padding: 9px 6px; border-bottom: 1px solid #f5f5f5; align-items: center; gap: 8px; min-width: 0; }
     .rrow:last-child { border-bottom: none; }
-    .rnum { font-size: 16px; font-weight: bold; color: #ddd; width: 24px; flex-shrink: 0; }
+    /* 奇数番が左列・偶数番が右列→左列最後と右列最初の境界線を消す */
+    .rrow.no-border-b { border-bottom: none; }
+
+    .rnum { font-size: 15px; font-weight: 800; color: #ddd; width: 22px; flex-shrink: 0; text-align: right; }
     .rnum.g { color: #f4a100; }
     .rnum.s { color: #9e9e9e; }
     .rnum.b { color: #a1674a; }
-    .rwrap { flex: 1; min-width: 0; }
-    .rname { font-weight: bold; color: #1a1a2e; cursor: pointer; }
+    .rwrap { flex: 1; min-width: 0; overflow: hidden; }
+    .rname { font-weight: 700; font-size: 13px; color: #1a1a2e; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .rname:hover { color: #e91e8c; text-decoration: underline; }
-    .rraw  { font-size: 11px; color: #ccc; }
-    .cands { margin-top: 4px; display: flex; flex-wrap: wrap; gap: 3px; }
-    .cands button { background: #f0f0f0; border: none; border-radius: 4px; padding: 2px 7px; font-size: 11px; cursor: pointer; }
-    .cands button:hover { background: #ddd; }
-    .rsales { font-weight: bold; font-size: 14px; white-space: nowrap; }
+    .rraw { font-size: 11px; color: #bbb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cands { margin-top: 3px; display: flex; flex-wrap: wrap; gap: 3px; }
+    .cands button { background: #f4f4f4; border: none; border-radius: 4px; padding: 2px 7px; font-size: 11px; cursor: pointer; }
+    .cands button:hover { background: #e0e0e0; }
+    .rsales { font-weight: 700; font-size: 13px; white-space: nowrap; color: #333; flex-shrink: 0; }
+
+    /* 合計推移ビュー */
+    .trend-chart-wrap { background: #fff; border-radius: 14px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.07); margin-top: 12px; }
+    .trend-chart-wrap h3 { margin: 0 0 14px; font-size: 15px; color: #e91e8c; }
+    .trend-table { margin-top: 12px; background: #fff; border-radius: 14px; padding: 0; box-shadow: 0 2px 8px rgba(0,0,0,.07); overflow: hidden; }
+    .trend-table table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .trend-table th { background: #fce4ec; color: #c2185b; font-weight: 700; padding: 10px 16px; text-align: left; }
+    .trend-table td { padding: 10px 16px; border-bottom: 1px solid #f5f5f5; }
+    .trend-table tr:last-child td { border-bottom: none; }
+    .trend-table tr:hover td { background: #fafafa; }
+    .trend-table .td-num { text-align: right; font-weight: 700; color: #e91e8c; }
+    .trend-table .td-bar-wrap { width: 40%; padding-right: 20px; }
+    .trend-bar { height: 8px; background: linear-gradient(90deg, #e91e8c, #f48fb1); border-radius: 4px; min-width: 2px; }
 
     /* モーダル */
-    #modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 200; align-items: center; justify-content: center; }
+    #modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: center; justify-content: center; }
     #modal.open { display: flex; }
-    #mbox { background: #fff; border-radius: 16px; padding: 24px; width: min(740px, 95vw); max-height: 88vh; overflow-y: auto; position: relative; }
-    #mtitle { font-size: 18px; font-weight: bold; margin-bottom: 16px; padding-right: 30px; }
-    #mclose { position: absolute; top: 16px; right: 20px; cursor: pointer; font-size: 22px; color: #bbb; }
+    #mbox { background: #fff; border-radius: 18px; padding: 26px; width: min(700px, 95vw); max-height: 88vh; overflow-y: auto; position: relative; }
+    #mtitle { font-size: 18px; font-weight: 800; margin-bottom: 16px; padding-right: 32px; }
+    #mclose { position: absolute; top: 18px; right: 22px; cursor: pointer; font-size: 22px; color: #ccc; line-height: 1; }
     #mclose:hover { color: #333; }
-    #mcharts { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
-    .mc-section h4 { margin: 0 0 8px; font-size: 14px; }
-    .mc-section h4.cs { color: #e91e8c; }
+    .mc-section h4 { margin: 0 0 10px; font-size: 13px; font-weight: 700; color: #e91e8c; }
   </style>
 </head>
 <body>
@@ -83,15 +113,15 @@
 
 <div class="card">
   <div class="file-row">
-    <span class="app-badge cs">アプリ別明細</span>
+    <span class="app-badge">アプリ別明細</span>
     <input type="file" id="fcs" accept=".xlsx,.xls" style="display:none">
-    <button class="file-btn cs" onclick="document.getElementById('fcs').click()">📂 ファイル選択</button>
+    <button class="file-btn" onclick="document.getElementById('fcs').click()">📂 ファイル選択</button>
     <span class="file-name" id="fncs"></span>
   </div>
   <div id="months"></div>
-  <div style="margin-top:10px;">
-    <button onclick="saveDataJson()" style="background:#2e7d32;color:#fff;border:none;border-radius:6px;padding:7px 16px;font-size:13px;cursor:pointer;">🔄 サイトを更新（data.json保存）</button>
-    <button onclick="exportStandalone()" style="background:#f57c00;color:#fff;border:none;border-radius:6px;padding:7px 16px;font-size:13px;cursor:pointer;margin-left:6px;">📤 共有用HTMLを書き出す</button>
+  <div class="action-bar">
+    <button class="act-btn" style="background:#2e7d32;" onclick="saveDataJson()">🔄 data.json 保存</button>
+    <button class="act-btn" style="background:#f57c00;" onclick="exportStandalone()">📤 共有用 HTML 書き出し</button>
   </div>
 </div>
 
@@ -99,20 +129,37 @@
   <div class="tabs">
     <button class="tabBtn on" onclick="switchTab('monthly')">📅 月別</button>
     <button class="tabBtn"    onclick="switchTab('yearly')">📊 年別合計</button>
+    <button class="tabBtn"    onclick="switchTab('trend')">📈 合計推移</button>
   </div>
+
+  <!-- 月別 -->
   <div id="view-monthly" class="view on">
-    <div id="month-total-bar" class="month-total" style="display:none;">
-      <span class="month-total-label" id="month-total-label"></span>
-      <span class="month-total-val" id="month-total-val"></span>
+    <div class="month-total-bar" id="month-total-bar">
+      <span id="month-total-label"></span>
+      <span id="month-total-val"></span>
     </div>
-    <div class="rank-grid" id="grid"></div>
+    <div class="card" style="padding:20px;" id="monthly-card">
+      <div class="rank-col-title"><h3 id="monthly-title"></h3></div>
+      <div class="rank-items" id="grid"></div>
+    </div>
   </div>
+
+  <!-- 年別合計 -->
   <div id="view-yearly" class="view">
-    <div class="rank-grid" id="ygrid"></div>
+    <div id="ygrid"></div>
+  </div>
+
+  <!-- 合計推移 -->
+  <div id="view-trend" class="view">
+    <div class="trend-chart-wrap">
+      <h3>月別合計推移</h3>
+      <canvas id="trendChart" style="max-height:280px;"></canvas>
+    </div>
+    <div class="trend-table" id="trend-table"></div>
   </div>
 </div>
 
-<!-- ライバー詳細モーダル -->
+<!-- モーダル -->
 <div id="modal">
   <div id="mbox">
     <span id="mclose" onclick="closeModal()">✕</span>
@@ -130,6 +177,7 @@ let csData = {};   // "202601" → { month:"2026年1月", livers:[] }
 let activeKey = null;
 let wbCs = null;
 let mCharts = [];
+let trendChart = null;
 
 // ===== 初期化 =====
 (async function init() {
@@ -142,14 +190,12 @@ let mCharts = [];
         const res = await fetch('./data.json');
         if (res.ok) {
           const json = await res.json();
-          if (json.cs) {
-            csData = json.cs || {};
-            loaded = true;
-          }
+          if (json.cs) { csData = json.cs || {}; loaded = true; }
         }
       } catch(e) {}
       if (!loaded) {
-        const c = localStorage.getItem('cs_v2'); if (c) csData = JSON.parse(c);
+        const c = localStorage.getItem('cs_v2');
+        if (c) csData = JSON.parse(c);
         if (typeof csData !== 'object') csData = {};
       }
     }
@@ -158,18 +204,15 @@ let mCharts = [];
   if (keys.length) {
     activeKey = keys[0];
     show(); renderChips();
-    try { renderRanking(); } catch(e) { console.error('init render error:', e); }
+    try { renderRanking(); } catch(e) { console.error(e); }
   }
 })();
 
 function persist() {
-  try {
-    localStorage.setItem('cs_v2', JSON.stringify(csData));
-  } catch(e) { console.warn('localStorage full:', e); }
+  try { localStorage.setItem('cs_v2', JSON.stringify(csData)); } catch(e) {}
 }
 
 // ===== シート名パーサー =====
-// YYYYMM / YYYY0M / YYMM すべて "YYYYMM" キーに正規化
 function parseSheet(name) {
   let m;
   m = name.match(/^(\d{4})0*(\d+)$/);
@@ -188,12 +231,9 @@ function parseSheet(name) {
 }
 
 function numKey(k) { return parseInt(k, 10); }
+function allKeys() { return Object.keys(csData).sort((a, b) => numKey(b) - numKey(a)); }
 
-function allKeys() {
-  return Object.keys(csData).sort((a, b) => numKey(b) - numKey(a));
-}
-
-// ===== アプリ別明細 (ColorSing) =====
+// ===== ファイル読み込み =====
 document.getElementById("fcs").addEventListener("change", function(e) {
   const file = e.target.files[0]; if (!file) return;
   document.getElementById("fncs").textContent = "読み込み中…";
@@ -202,13 +242,13 @@ document.getElementById("fcs").addEventListener("change", function(e) {
     try {
       wbCs = XLSX.read(ev.target.result, { type: "array" });
       const sheets = wbCs.SheetNames.filter(n => { const p = parseSheet(n); return p && p.year >= 2025; });
-      if (sheets.length === 0) { alert("対応するシートが見つかりませんでした"); return; }
+      if (!sheets.length) { alert("対応するシートが見つかりませんでした"); return; }
       sheets.forEach(n => loadCs(n));
-      const totalCs = sheets.reduce((s, n) => {
+      const total = sheets.reduce((s, n) => {
         const p = parseSheet(n); return s + (p && csData[p.key]?.livers?.length || 0);
       }, 0);
-      document.getElementById("fncs").textContent = `${file.name}（${sheets.length}ヶ月・${totalCs}件）`;
-    } catch(err) { alert("ファイルの読み込みエラー: " + err.message); }
+      document.getElementById("fncs").textContent = `${file.name}（${sheets.length}ヶ月・${total}件）`;
+    } catch(err) { alert("読み込みエラー: " + err.message); }
   };
   reader.onerror = () => alert("ファイルの読み取りに失敗しました");
   reader.readAsArrayBuffer(file);
@@ -218,58 +258,41 @@ function loadCs(sheetName) {
   try {
     const ws = wbCs?.Sheets[sheetName]; if (!ws) return;
     const p = parseSheet(sheetName); if (!p) return;
-
     const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
 
-    // ColorSing セクションをすべて探す（"ColorSing" と "ColorSing②" など）
+    // ColorSing / ColorSing② セクションをすべて合算
     // 構造: タイトル行(col A に "ColorSing") → 列ヘッダー行 → データ行
-    // データ列: 本名(0), ライバー名(1), -(2), 合計（税込）(3)
-    const salesMap = {}; // real_name → { raw_name, sales }
-
+    // データ: 本名(0), ライバー名(1), -(2), 合計税込(3)
+    const salesMap = {};
     let i = 0;
     while (i < rows.length) {
       const cell = rows[i][0];
       if (cell && String(cell).includes('ColorSing')) {
-        // タイトル行を発見、次の行がヘッダー、その次からデータ
-        i += 2; // ヘッダー行をスキップ
+        i += 2; // ヘッダー行スキップ
         while (i < rows.length) {
           const row = rows[i];
           const rn = row[0];
-          // 空行または次のセクションヘッダーに当たったら終了
           if (!rn) { i++; break; }
           const cellStr = String(rn);
-          // 次のセクション（ColorSingや他アプリ）のタイトル行に当たったら終了
           if (cellStr.includes('ColorSing') || cellStr.includes('TikTok') || cellStr.includes('Pococha')) break;
-
           const sales = row[3];
           const salesNum = typeof sales === 'number' ? sales : parseFloat(sales);
           if (isFinite(salesNum) && salesNum > 0) {
             const ln = row[1];
-            const key = cellStr;
-            if (!salesMap[key]) {
-              salesMap[key] = {
-                real_name: cellStr,
-                raw_name: ln ? String(ln) : cellStr,
-                sales: 0
-              };
-            }
-            salesMap[key].sales += Math.round(salesNum);
+            if (!salesMap[cellStr]) salesMap[cellStr] = { real_name: cellStr, raw_name: ln ? String(ln) : cellStr, sales: 0 };
+            salesMap[cellStr].sales += Math.round(salesNum);
           }
           i++;
         }
-      } else {
-        i++;
-      }
+      } else { i++; }
     }
 
     const livers = Object.values(salesMap).filter(l => l.sales > 0);
-    if (livers.length === 0) { console.warn('ColorSing data not found in', sheetName); return; }
-
-    // 表示名を維持
+    if (!livers.length) { console.warn('ColorSing data not found in', sheetName); return; }
     livers.forEach(l => {
       const prev = csData[p.key]?.livers?.find(x => x.real_name === l.real_name);
       l.candidates = [{ name: l.real_name }];
-      l.selected = prev?.selected || l.real_name;
+      l.selected = prev?.selected || l.raw_name; // デフォルト表示名 = ライバー名
     });
 
     csData[p.key] = { month: p.label, livers };
@@ -277,12 +300,11 @@ function loadCs(sheetName) {
   } catch(e) { console.error('loadCs error:', sheetName, e); }
 }
 
-// ===== データ読み込み後 =====
 function onLoaded(key) {
   try {
     if (!activeKey || numKey(key) > numKey(activeKey)) activeKey = key;
     show(); renderChips(); renderRanking(); persist();
-  } catch(e) { console.error('onLoaded error:', e); alert('表示エラー: ' + e.message); }
+  } catch(e) { console.error(e); alert('表示エラー: ' + e.message); }
 }
 
 function show() { document.getElementById("rankArea").style.display = "block"; }
@@ -301,11 +323,14 @@ let activeTab = 'monthly';
 function switchTab(tab) {
   activeTab = tab;
   document.querySelectorAll('.tabBtn').forEach((btn, i) => {
-    btn.classList.toggle('on', (tab === 'monthly' && i === 0) || (tab === 'yearly' && i === 1));
+    btn.classList.toggle('on',
+      (tab==='monthly'&&i===0)||(tab==='yearly'&&i===1)||(tab==='trend'&&i===2));
   });
-  document.getElementById('view-monthly').classList.toggle('on', tab === 'monthly');
-  document.getElementById('view-yearly').classList.toggle('on', tab === 'yearly');
+  ['monthly','yearly','trend'].forEach(t => {
+    document.getElementById(`view-${t}`).classList.toggle('on', t === tab);
+  });
   if (tab === 'yearly') renderYearly();
+  if (tab === 'trend')  renderTrend();
 }
 
 function switchMonth(key) { activeKey = key; renderChips(); renderRanking(); }
@@ -317,51 +342,52 @@ function removeMonth(e, key) {
   renderChips(); renderRanking(); persist();
 }
 
-// ===== ランキング =====
+// ===== 月別ランキング =====
 function renderRanking() {
-  const grid = document.getElementById("grid");
-  const bar  = document.getElementById("month-total-bar");
-  const lbl  = document.getElementById("month-total-label");
-  const val  = document.getElementById("month-total-val");
-  if (!activeKey) { grid.innerHTML = ""; bar.style.display = "none"; return; }
+  const grid  = document.getElementById("grid");
+  const bar   = document.getElementById("month-total-bar");
+  const lbl   = document.getElementById("month-total-label");
+  const val   = document.getElementById("month-total-val");
+  const title = document.getElementById("monthly-title");
 
+  if (!activeKey || !csData[activeKey]) {
+    grid.innerHTML = ""; bar.style.display = "none"; return;
+  }
   const cd = csData[activeKey];
-  if (!cd) { grid.innerHTML = ""; bar.style.display = "none"; return; }
-
   const total = cd.livers.reduce((s, l) => s + l.sales, 0);
+
   lbl.textContent = `${cd.month} 全体合計`;
   val.textContent = `¥${total.toLocaleString()}`;
   bar.style.display = "flex";
+  title.textContent = `ColorSing ${cd.month}`;
 
-  grid.innerHTML = rankColHTML(cd.livers, `ColorSing ${cd.month}`, activeKey);
-}
-
-function rankColHTML(livers, title, mk) {
-  const sorted = [...livers].sort((a, b) => b.sales - a.sales);
+  const sorted = [...cd.livers].sort((a, b) => b.sales - a.sales);
   const nc = i => i===0?'g':i===1?'s':i===2?'b':'';
-  const rows = sorted.map((l, i) => {
+  // 2列グリッドで奇数行（左列最後）の境界線制御
+  const totalRows = sorted.length;
+  grid.innerHTML = sorted.map((l, i) => {
     const er = encodeURIComponent(l.real_name);
+    // 左列の最後の行（右列が存在しない場合）はボーダーなし
+    const noBorder = (totalRows % 2 === 1 && i === totalRows - 1) ? ' no-border-b' : '';
     return `
-      <div class="rrow">
+      <div class="rrow${noBorder}">
         <span class="rnum ${nc(i)}">${i+1}</span>
         <div class="rwrap">
-          <div class="rname" onclick="openModal('${encodeURIComponent(l.real_name)}')">${escH(l.selected||l.real_name)}</div>
-          <div class="rraw">${escH(l.raw_name)}</div>
+          <div class="rname" onclick="openModal('${encodeURIComponent(l.real_name)}')">${escH(l.selected||l.raw_name)}</div>
+          <div class="rraw">${escH(l.real_name)}</div>
           <div class="cands">
-            ${(l.candidates||[]).map(c=>`<button onclick="sel('${mk}','${er}','${encodeURIComponent(c.name)}')">${escH(c.name)}</button>`).join("")}
-            <button onclick="sel('${mk}','${er}','__NEW__')">＋新規</button>
+            ${(l.candidates||[]).map(c=>`<button onclick="sel('${activeKey}','${er}','${encodeURIComponent(c.name)}')">${escH(c.name)}</button>`).join("")}
+            <button onclick="sel('${activeKey}','${er}','__NEW__')">＋新規</button>
           </div>
         </div>
         <div class="rsales">¥${l.sales.toLocaleString()}</div>
       </div>`;
   }).join("");
-  return `<div class="rank-col"><h3 class="cs">${escH(title)}</h3>${rows}</div>`;
 }
 
 // ===== 年別ランキング =====
 function renderYearly() {
   const ygrid = document.getElementById("ygrid");
-
   const years = [...new Set(
     Object.keys(csData).map(k => parseSheet(k)?.year).filter(Boolean)
   )].sort((a, b) => b - a);
@@ -369,58 +395,123 @@ function renderYearly() {
   let html = '';
   for (const year of years) {
     const keys = Object.keys(csData).filter(k => parseSheet(k)?.year === year);
-    if (keys.length === 0) continue;
+    if (!keys.length) continue;
 
     const totals = {};
     for (const k of keys) {
       for (const l of (csData[k].livers || [])) {
         const id = l.real_name;
-        if (!totals[id]) totals[id] = { real_name: id, selected: l.selected || l.real_name, sales: 0 };
-        totals[id].selected = l.selected || l.real_name;
-        totals[id].sales += l.sales;
+        if (!totals[id]) totals[id] = { real_name: id, raw_name: l.raw_name, selected: l.selected || l.raw_name, sales: 0 };
+        totals[id].raw_name  = l.raw_name;
+        totals[id].selected  = l.selected || l.raw_name;
+        totals[id].sales    += l.sales;
       }
     }
-
     const sorted = Object.values(totals).sort((a, b) => b.sales - a.sales);
-    if (sorted.length === 0) continue;
+    if (!sorted.length) continue;
 
     const yearTotal = sorted.reduce((s, l) => s + l.sales, 0);
     const nc = i => i===0?'g':i===1?'s':i===2?'b':'';
-    const rows = sorted.map((l, i) => `
-      <div class="rrow">
-        <span class="rnum ${nc(i)}">${i+1}</span>
-        <div class="rwrap">
-          <div class="rname" onclick="openModal('${encodeURIComponent(l.real_name)}')">${escH(l.selected)}</div>
-          <div class="rraw">${escH(l.real_name)}</div>
+    const totalRows = sorted.length;
+    const rows = sorted.map((l, i) => {
+      const noBorder = (totalRows % 2 === 1 && i === totalRows - 1) ? ' no-border-b' : '';
+      return `
+        <div class="rrow${noBorder}">
+          <span class="rnum ${nc(i)}">${i+1}</span>
+          <div class="rwrap">
+            <div class="rname" onclick="openModal('${encodeURIComponent(l.real_name)}')">${escH(l.selected)}</div>
+            <div class="rraw">${escH(l.real_name)}</div>
+          </div>
+          <div class="rsales">¥${l.sales.toLocaleString()}</div>
+        </div>`;
+    }).join('');
+
+    html += `
+      <div class="card" style="margin-top:12px; padding:18px 20px;">
+        <div class="rank-col-title">
+          <h3>${year}年 ColorSing ランキング</h3>
+          <span class="year-total">年間合計 ¥${yearTotal.toLocaleString()}</span>
         </div>
-        <div class="rsales">¥${l.sales.toLocaleString()}</div>
-      </div>`).join('');
-
-    html += `<div class="rank-col"><h3 class="cs">${year}年 ColorSing ランキング <span style="font-size:12px;color:#aaa;font-weight:normal;">合計 ¥${yearTotal.toLocaleString()}</span></h3>${rows}</div>`;
+        <div class="rank-items">${rows}</div>
+      </div>`;
   }
-
-  ygrid.innerHTML = html || '<p style="color:#aaa;padding:16px;">データがありません</p>';
+  ygrid.innerHTML = html || '<p style="color:#bbb;padding:20px;">データがありません</p>';
 }
 
+// ===== 合計推移 =====
+function renderTrend() {
+  const keys = allKeys().slice().reverse(); // 古い順
+  if (!keys.length) return;
+
+  const labels = keys.map(k => csData[k]?.month || k);
+  const vals   = keys.map(k => csData[k]?.livers?.reduce((s, l) => s + l.sales, 0) || 0);
+  const maxVal = Math.max(...vals, 1);
+
+  // Chart
+  if (trendChart) { trendChart.destroy(); trendChart = null; }
+  trendChart = new Chart(document.getElementById("trendChart"), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data: vals,
+        backgroundColor: 'rgba(233,30,140,.75)',
+        borderColor: 'rgba(233,30,140,1)',
+        borderWidth: 1,
+        borderRadius: 5,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, ticks: { callback: v => '¥' + v.toLocaleString() }, grid: { color: '#f0f0f0' } },
+        x: { ticks: { maxRotation: 45, minRotation: 30 }, grid: { display: false } }
+      }
+    }
+  });
+
+  // Table（新しい順）
+  const tableRows = keys.slice().reverse().map((k, idx) => {
+    const v = vals[keys.length - 1 - idx];
+    const pct = Math.round(v / maxVal * 100);
+    return `<tr>
+      <td>${csData[k]?.month || k}</td>
+      <td class="td-bar-wrap"><div class="trend-bar" style="width:${pct}%"></div></td>
+      <td class="td-num">¥${v.toLocaleString()}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById("trend-table").innerHTML = `
+    <table>
+      <thead><tr><th>月</th><th>推移</th><th>合計</th></tr></thead>
+      <tbody>${tableRows}</tbody>
+    </table>`;
+}
+
+// ===== 名前変更 =====
 function sel(mk, realEnc, nameEnc) {
   const realName = decodeURIComponent(realEnc);
   const l = csData[mk]?.livers.find(x => x.real_name === realName);
   if (!l) return;
-  if (nameEnc === "__NEW__") { const v = prompt("新しい名前を入力"); if (v) l.selected = v; }
+  if (nameEnc === "__NEW__") { const v = prompt("表示名を入力"); if (v) l.selected = v; }
   else l.selected = decodeURIComponent(nameEnc);
-  renderRanking(); persist();
+  renderRanking(); if (activeTab === 'yearly') renderYearly(); persist();
 }
 
-// ===== モーダル（ライバー月別グラフ） =====
+// ===== モーダル =====
 function openModal(enc) {
   const realName = decodeURIComponent(enc);
   mCharts.forEach(c => c.destroy()); mCharts = [];
 
+  // 表示名を最新月から取得
   let displayName = realName;
-  const k = Object.keys(csData).sort((a,b)=>numKey(b)-numKey(a))
+  const latestKey = Object.keys(csData).sort((a,b)=>numKey(b)-numKey(a))
     .find(k => csData[k].livers.find(l => l.real_name === realName));
-  if (k) { const l = csData[k].livers.find(l => l.real_name === realName);
-    if (l) displayName = l.selected || realName; }
+  if (latestKey) {
+    const l = csData[latestKey].livers.find(l => l.real_name === realName);
+    if (l) displayName = l.selected || l.raw_name;
+  }
   document.getElementById("mtitle").textContent = displayName;
 
   const monthly = {};
@@ -428,32 +519,32 @@ function openModal(enc) {
     const l = csData[key].livers.find(x => x.real_name === realName);
     if (l) monthly[key] = l.sales;
   }
-
   const div = document.getElementById("mcharts");
   div.innerHTML = "";
-
   if (!Object.keys(monthly).length) return;
 
-  const cid = 'mc_cs';
   const sec = document.createElement("div");
   sec.className = "mc-section";
-  sec.innerHTML = `<h4 class="cs">ColorSing</h4><canvas id="${cid}"></canvas>`;
+  sec.innerHTML = `<h4 class="cs">ColorSing 月別売上</h4><canvas id="mc_cs"></canvas>`;
   div.appendChild(sec);
 
   const sortedK = Object.keys(monthly).sort((a,b)=>numKey(a)-numKey(b));
   setTimeout(() => {
-    const c = new Chart(document.getElementById(cid), {
+    const c = new Chart(document.getElementById("mc_cs"), {
       type: 'bar',
       data: {
         labels: sortedK.map(k => { const p=parseSheet(k); return p?p.label:k; }),
-        datasets: [{ data: sortedK.map(k=>monthly[k]),
-          backgroundColor: 'rgba(233,30,140,.7)', borderColor: 'rgba(233,30,140,1)', borderWidth: 1 }]
+        datasets: [{
+          data: sortedK.map(k=>monthly[k]),
+          backgroundColor: 'rgba(233,30,140,.7)', borderColor: '#e91e8c',
+          borderWidth: 1, borderRadius: 4
+        }]
       },
       options: {
         responsive: true,
         plugins: { legend: { display: false } },
         scales: {
-          y: { beginAtZero: true, ticks: { callback: v => v.toLocaleString() } },
+          y: { beginAtZero: true, ticks: { callback: v => '¥'+v.toLocaleString() } },
           x: { ticks: { maxRotation: 45, minRotation: 30 } }
         }
       }
@@ -469,35 +560,27 @@ document.getElementById("modal").addEventListener("click", e => {
   if (e.target === document.getElementById("modal")) closeModal();
 });
 
-// ===== data.json 保存（Vercel更新用）=====
+// ===== data.json 保存 =====
 function saveDataJson() {
-  const json = JSON.stringify({ cs: csData }, null, 2);
-  const blob = new Blob([json], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify({ cs: csData }, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'data.json';
-  a.click();
+  a.href = URL.createObjectURL(blob); a.download = 'data.json'; a.click();
   URL.revokeObjectURL(a.href);
 }
 
 // ===== 共有用HTML書き出し =====
 function exportStandalone() {
   const src = document.documentElement.outerHTML;
-  const dataStr = JSON.stringify({ cs: csData });
   const out = src.replace(
     'const BAKED_DATA = null; // BAKED_DATA_PLACEHOLDER',
-    `const BAKED_DATA = ${dataStr}; // BAKED_DATA_PLACEHOLDER`
+    `const BAKED_DATA = ${JSON.stringify({ cs: csData })}; // BAKED_DATA_PLACEHOLDER`
   );
-  if (out === src) {
-    alert('書き出し失敗：プレースホルダーが見つかりませんでした');
-    return;
-  }
+  if (out === src) { alert('書き出し失敗：プレースホルダーが見つかりませんでした'); return; }
   const blob = new Blob([out], { type: 'text/html' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `ColorSing売上_${new Date().toISOString().slice(0,10)}.html`;
-  a.click();
-  URL.revokeObjectURL(a.href);
+  a.click(); URL.revokeObjectURL(a.href);
 }
 
 function escH(s) {
